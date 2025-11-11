@@ -1,3 +1,5 @@
+name:
+  hdfs
 services:
   namenode:
     image: docker.io/apache/hadoop:3.4.1
