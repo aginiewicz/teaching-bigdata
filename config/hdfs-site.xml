@@ -11,4 +11,8 @@
     <name>dfs.datanode.data.dir</name>
     <value>/opt/hadoop/data/dataNode</value>
   </property>
+  <property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+  </property>
 </configuration>
