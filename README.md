@@ -3,3 +3,4 @@
 Sprawdź branche:
 
   - hdfs
+  - spark
