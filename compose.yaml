@@ -1,9 +1,9 @@
 name:
-  hdfs
+  spark
 services:
   namenode:
     image: docker.io/apache/hadoop:3.4.1
-    container_name: namenode
+    container_name: hdfs-namenode
     hostname: namenode
     user: root
     environment:
@@ -12,20 +12,19 @@ services:
     volumes:
       - ./exchange:/exchange
       - ./data/namenode:/opt/hadoop/data/nameNode
-      - ./config:/opt/hadoop/etc/hadoop
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
       - ./scripts/start-namenode.sh:/run.sh
     ports:
       - "9870:9870"
       - "9000:9000"
       - "9866:9866"
     command: [ "/bin/bash", "/run.sh" ]
-    restart: always
     networks:
       fake_network:
-        ipv4_address: 172.42.0.2
+        ipv4_address: 172.43.0.2
   datanode1:
     image: docker.io/apache/hadoop:3.4.1
-    container_name: datanode1
+    container_name: hdfs-datanode1
     hostname: datanode1
     user: root
     environment:
@@ -33,20 +32,19 @@ services:
       - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
     volumes:
       - ./data/datanode1:/opt/hadoop/data/dataNode
-      - ./config:/opt/hadoop/etc/hadoop
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
       - ./scripts/start-datanode.sh:/run.sh
     ports:
       - "9864:9864"
     depends_on:
       - namenode
     command: [ "/bin/bash", "/run.sh" ]
-    restart: always
     networks:
       fake_network:
-        ipv4_address: 172.42.0.3
+        ipv4_address: 172.43.0.3
   datanode2:
     image: docker.io/apache/hadoop:3.4.1
-    container_name: datanode2
+    container_name: hdfs-datanode2
     hostname: datanode2
     user: root
     environment:
@@ -54,21 +52,164 @@ services:
       - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
     volumes:
       - ./data/datanode2:/opt/hadoop/data/dataNode
-      - ./config:/opt/hadoop/etc/hadoop
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
       - ./scripts/start-datanode.sh:/run.sh
     ports:
       - "9865:9864"
     depends_on:
       - namenode
     command: [ "/bin/bash", "/run.sh" ]
-    restart: always
     networks:
       fake_network:
-        ipv4_address: 172.42.0.4
+        ipv4_address: 172.43.0.4
+  spark-master:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: spark-rpy:latest
+    container_name: spark-master
+    hostname: spark-master
+    user: root
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
+    volumes:
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./config/spark:/opt/spark/conf
+      - ./data/spark-history:/spark-history
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    depends_on:
+      - namenode
+    command: [ "/opt/spark/sbin/start-master.sh" ]
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.5
+  spark-worker1:
+    image: spark-rpy:latest
+    container_name: spark-worker1
+    hostname: spark-worker1
+    user: root
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=1g
+    volumes:
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./config/spark:/opt/spark/conf
+      - ./data/spark-history:/spark-history
+    ports:
+      - "8081:8081"
+    depends_on:
+      - spark-master
+    command: [ "/opt/spark/sbin/start-worker.sh", "spark://spark-master:7077" ]
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.6
+  spark-worker2:
+    image: spark-rpy:latest
+    container_name: spark-worker2
+    hostname: spark-worker2
+    user: root
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=1g
+    volumes:
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./config/spark:/opt/spark/conf
+      - ./data/spark-history:/spark-history
+    ports:
+      - "8082:8081"
+    depends_on:
+      - spark-master
+    command: [ "/opt/spark/sbin/start-worker.sh", "spark://spark-master:7077" ]
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.7
+  spark-connect:
+    image: spark-rpy:latest
+    container_name: spark-connect
+    hostname: spark-connect
+    user: root
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
+    ports:
+      - "4040:4040"
+      - "15002:15002"
+    depends_on:
+      - spark-master
+    command: [ "/opt/spark/sbin/start-connect-server.sh" ]
+    volumes:
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./config/spark:/opt/spark/conf
+      - ./data/spark-history:/spark-history
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.8
+  spark-history:
+    image: spark-rpy:latest
+    container_name: spark-history
+    hostname: spark-history
+    user: root
+    environment:
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
+      - SPARK_HISTORY_OPTS="-Dspark.history.fs.logDirectory=file:///spark-history"
+    ports:
+      - "18080:18080"
+    depends_on:
+      - spark-master
+    command: [ "/opt/spark/sbin/start-history-server.sh" ]
+    volumes:
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./data/spark-history:/spark-history
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.9
+  rstudio:
+    image: spark-rpy:latest
+    container_name: rstudio
+    hostname: rstudio
+    user: root
+    environment:
+      - PASSWORD=rstudio
+    ports:
+      - "8787:8787"
+    depends_on:
+      - spark-master
+    command: [ "/init" ]
+    networks:
+      fake_network:
+        ipv4_address: 172.43.0.10
 networks:
   fake_network:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 172.42.0.0/16
+        - subnet: 172.43.0.0/16
