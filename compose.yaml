@@ -207,7 +207,7 @@ services:
     volumes:
       - ./results:/root/results
       - ./config/hadoop:/opt/hadoop/etc/hadoop
-      - ./config/spark:/opt/spark/conf
+      - ./config/spark-for-r:/opt/spark/conf
     ports:
       - "8787:8787"
     depends_on:
