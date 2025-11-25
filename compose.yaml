@@ -198,6 +198,8 @@ services:
     user: root
     environment:
       - PASSWORD=rstudio
+    volumes:
+      - ./results:/root/results
     ports:
       - "8787:8787"
     depends_on:
