@@ -198,8 +198,16 @@ services:
     user: root
     environment:
       - PASSWORD=rstudio
+      - RUNROOTLESS=true
+      - HADOOP_HOME=/opt/hadoop
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER="spark://spark-master:7077"
     volumes:
       - ./results:/root/results
+      - ./config/hadoop:/opt/hadoop/etc/hadoop
+      - ./config/spark:/opt/spark/conf
     ports:
       - "8787:8787"
     depends_on:

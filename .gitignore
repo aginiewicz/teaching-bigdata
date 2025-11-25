@@ -1,3 +1,4 @@
 data/*/current
 data/*/in_use.lock
 data/*/*log*
+results/*

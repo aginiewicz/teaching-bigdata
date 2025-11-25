@@ -46,12 +46,8 @@ RUN set -ex; \
     echo "logger-type=syslog" >> /etc/rstudio/logging.conf; \
     echo "" > /etc/cont-init.d/01_set_env; \
     R CMD javareconf; \
-    useradd -s /bin/bash -m rstudio; \
-    echo "rstudio:rstudio" | chpasswd; \
-usermod -a -G staff rstudio; \
-    mkdir -p "/home/rstudio/.config/rstudio/"; \
-    echo '{"save_workspace": "never", "always_save_history": false, "reuse_sessions_for_project_links": true, "posix_terminal_shell": "bash"}' > /home/rstudio/.config/rstudio/rstudio-prefs.json; \
-    chown -R rstudio:rstudio /home/rstudio; \
+    mkdir -p "/root/.config/rstudio/"; \
+    echo "{\"save_workspace\": \"never\", \"always_save_history\": false, \"reuse_sessions_for_project_links\": true, \"initial_working_directory\": \"/root/results\", \"python_project_environment_automatic_activate\": false, \"posix_terminal_shell\": \"bash\", \"python_type\": \"system\", \"python_version\": \"${PYTHON_VERSION}\", \"python_path\": \"/opt/python/${PYTHON_VERSION}/bin/python\"}" > /root/.config/rstudio/rstudio-prefs.json; \
     mkdir -p "/opt/R/${R_VERSION}/lib/R/site-library"; \
     chown root:staff "/opt/R/${R_VERSION}/lib/R/site-library"; \
     chmod g+ws "/opt/R/${R_VERSION}/lib/R/site-library"; \
