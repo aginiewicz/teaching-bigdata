@@ -1,4 +1,4 @@
-# HDFS na zajęcia: Algorytmy Big-Data
+# HDFS na zajęcia: Algorytmy Big-Data (zima 2025/26)
 
 Po sklonowaniu repozytorium przejdź do katalogu z plikiem `compose.yaml` i wykonaj komendę
 
